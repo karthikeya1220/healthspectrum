@@ -75,7 +75,8 @@ const Index = () => {
       frequency: "Once daily",
       timeOfDay: ["Morning"],
       refillDate: "June 15, 2023",
-      instructions: "Take with food"
+      instructions: "Take with food",
+      isLowSupply: true
     },
     {
       id: "med-002",
