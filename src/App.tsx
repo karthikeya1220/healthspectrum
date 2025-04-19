@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Index from './pages/Index';
 import MedicalRecords from './pages/MedicalRecords';
@@ -12,6 +12,9 @@ import { Toaster } from './components/ui/toaster';
 import NotFound from './pages/NotFound';
 import CommandMenu from './components/CommandMenu';
 import NetworkStatus from './components/NetworkStatus';
+import { StatusIndicator } from './components/StatusIndicator';
+import { StatusProvider } from './contexts/StatusContext';
+import { ActionHistoryProvider } from './contexts/ActionHistoryContext';
 
 // Scroll to top component for better UX - Consistency & Standards (Nielsen's Heuristic #4)
 function ScrollToTop() {
@@ -68,26 +71,30 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <Router>
-        <SkipToContent />
-        <ScrollToTop />
-        <CommandMenu />
-        <NetworkStatus />
-        <main id="main-content">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/records" element={<MedicalRecords />} />
-            <Route path="/appointments" element={<AppointmentBooking />} />
-            <Route path="/medications" element={<MedicationTracker />} />
-            <Route path="/emergency" element={<Emergency />} />
-            <Route path="/help" element={<HelpSupport />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        <Toaster />
-      </Router>
+      <ActionHistoryProvider>
+        <StatusProvider>
+          <Router>
+            <SkipToContent />
+            <ScrollToTop />
+            <CommandMenu />
+            <NetworkStatus />
+            <main id="main-content">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/records" element={<MedicalRecords />} />
+                <Route path="/appointments" element={<AppointmentBooking />} />
+                <Route path="/medications" element={<MedicationTracker />} />
+                <Route path="/emergency" element={<Emergency />} />
+                <Route path="/help" element={<HelpSupport />} />
+                <Route path="/settings" element={<Settings />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <Toaster />
+          </Router>
+        </StatusProvider>
+      </ActionHistoryProvider>
     </ErrorBoundary>
   );
 }
