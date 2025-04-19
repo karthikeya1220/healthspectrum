@@ -1,152 +1,149 @@
-import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { ChevronRight, Home } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronRight, Home } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface BreadcrumbItem {
-  path: string;
+export interface BreadcrumbItem {
   label: string;
+  href?: string;
   icon?: React.ReactNode;
 }
 
-const routeConfig: Record<string, { label: string; parent?: string }> = {
-  '': { label: 'Home' },
-  'medications': { label: 'Medications', parent: '' },
-  'appointments': { label: 'Appointments', parent: '' },
-  'records': { label: 'Medical Records', parent: '' },
-  'emergency': { label: 'Emergency', parent: '' },
-  'help-support': { label: 'Help & Support', parent: '' },
-  'settings': { label: 'Settings', parent: '' },
-  'new-medication': { label: 'Add Medication', parent: 'medications' },
-  'edit-medication': { label: 'Edit Medication', parent: 'medications' },
-  'book-appointment': { label: 'Book Appointment', parent: 'appointments' },
-  'reschedule': { label: 'Reschedule', parent: 'appointments' },
-};
+interface BreadcrumbsProps {
+  items: BreadcrumbItem[];
+  className?: string;
+  separator?: React.ReactNode;
+  homeIcon?: boolean;
+  maxItems?: number; // Maximum number of items to show before truncating
+}
 
-const Breadcrumbs = () => {
-  const location = useLocation();
-  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
+const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
+  items,
+  className,
+  separator = <ChevronRight className="h-4 w-4 text-muted-foreground" />,
+  homeIcon = true,
+  maxItems = 4
+}) => {
+  // If we have more items than maxItems, truncate the middle items
+  const displayedItems = items.length > maxItems 
+    ? [
+        items[0], 
+        { label: '...', href: undefined, icon: undefined }, 
+        ...items.slice(items.length - (maxItems - 2))
+      ]
+    : items;
 
-  useEffect(() => {
-    const buildBreadcrumbs = () => {
-      const pathSegments = location.pathname.split('/').filter(Boolean);
-      if (pathSegments.length === 0) return [{ path: '/', label: 'Home', icon: <Home className="h-4 w-4" /> }];
+  // Add microdata for SEO and accessibility
+  const generateStructuredData = () => {
+    const itemListElements = items.map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": item.label,
+      "item": item.href
+    }));
 
-      const breadcrumbItems: BreadcrumbItem[] = [{ path: '/', label: 'Home', icon: <Home className="h-4 w-4" /> }];
-      let currentPath = '';
-
-      // Recursive function to add parents
-      const addParent = (routeKey: string) => {
-        const config = routeConfig[routeKey];
-        if (config && config.parent) {
-          const parentPath = `/${config.parent}`;
-          const parentConfig = routeConfig[config.parent];
-          if (parentConfig) {
-            breadcrumbItems.push({
-              path: parentPath,
-              label: parentConfig.label,
-            });
-          }
-          addParent(config.parent);
-        }
-      };
-
-      // Process path segments
-      for (let i = 0; i < pathSegments.length; i++) {
-        const segment = pathSegments[i];
-        currentPath += `/${segment}`;
-        
-        // Check if this is an ID segment (typically the last one or followed by "edit")
-        const isIdSegment = 
-          (i === pathSegments.length - 1 && segment.match(/^[0-9a-fA-F]{24}$/)) || 
-          (i < pathSegments.length - 1 && pathSegments[i+1] === 'edit' && segment.match(/^[0-9a-fA-F]{24}$/));
-        
-        if (isIdSegment) {
-          // This is an ID segment, use the previous segment's config for context
-          if (i > 0 && routeConfig[pathSegments[i-1]]) {
-            const itemType = routeConfig[pathSegments[i-1]].label.replace(/s$/, ''); // Remove plural
-            breadcrumbItems.push({
-              path: currentPath,
-              label: `${itemType} Details`,
-            });
-          } else {
-            breadcrumbItems.push({
-              path: currentPath,
-              label: 'Details',
-            });
-          }
-          continue;
-        }
-        
-        // Regular named route
-        if (routeConfig[segment]) {
-          const { label } = routeConfig[segment];
-          
-          // Add parent first if exists and not already in breadcrumbs
-          addParent(segment);
-          
-          breadcrumbItems.push({
-            path: currentPath,
-            label,
-          });
-        } else {
-          // Fallback for unknown routes
-          breadcrumbItems.push({
-            path: currentPath,
-            label: segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' '),
-          });
-        }
-      }
-
-      // Remove duplicates
-      const unique = breadcrumbItems.filter(
-        (item, index, self) => index === self.findIndex((t) => t.path === item.path)
-      );
-
-      // Sort by path depth
-      unique.sort((a, b) => {
-        const depthA = a.path.split('/').filter(Boolean).length;
-        const depthB = b.path.split('/').filter(Boolean).length;
-        return depthA - depthB;
-      });
-
-      return unique;
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": itemListElements
     };
-
-    setBreadcrumbs(buildBreadcrumbs());
-  }, [location]);
-
-  if (breadcrumbs.length <= 1) return null;
+  };
 
   return (
-    <nav aria-label="Breadcrumbs" className="mb-4">
-      <ol className="flex flex-wrap items-center text-sm">
-        {breadcrumbs.map((breadcrumb, index) => {
-          const isLast = index === breadcrumbs.length - 1;
+    <nav 
+      className={cn("flex text-sm", className)} 
+      aria-label="Breadcrumb"
+    >
+      <ol 
+        className="flex items-center flex-wrap"
+        itemScope
+        itemType="https://schema.org/BreadcrumbList"
+      >
+        {/* Optional home link at the beginning */}
+        {homeIcon && (
+          <li 
+            className="flex items-center" 
+            itemProp="itemListElement" 
+            itemScope 
+            itemType="https://schema.org/ListItem"
+          >
+            <Link 
+              to="/" 
+              className="text-muted-foreground hover:text-foreground transition-colors flex items-center"
+              itemProp="item"
+            >
+              <Home className="h-4 w-4" />
+              <span className="sr-only" itemProp="name">Home</span>
+            </Link>
+            <meta itemProp="position" content="1" />
+            <span className="mx-2 text-muted-foreground" aria-hidden="true">
+              {separator}
+            </span>
+          </li>
+        )}
+        
+        {/* Breadcrumb items */}
+        {displayedItems.map((item, index) => {
+          const isLast = index === displayedItems.length - 1;
+          const position = homeIcon ? index + 2 : index + 1;
+          
           return (
-            <li key={breadcrumb.path} className="flex items-center">
-              {index > 0 && <ChevronRight className="mx-2 h-4 w-4 text-muted-foreground" />}
-              {isLast ? (
-                <span className="font-medium text-foreground" aria-current="page">
-                  {breadcrumb.icon && <span className="mr-1.5 inline-block align-text-bottom">{breadcrumb.icon}</span>}
-                  {breadcrumb.label}
-                </span>
-              ) : (
-                <Link
-                  to={breadcrumb.path}
-                  className={cn(
-                    "text-muted-foreground hover:text-foreground hover:underline",
-                    breadcrumb.icon && "flex items-center"
-                  )}
+            <li 
+              key={index} 
+              className={cn(
+                "flex items-center",
+                // If this is a truncation indicator, make it obvious
+                item.label === '...' && "text-muted-foreground px-1"
+              )}
+              itemProp="itemListElement" 
+              itemScope 
+              itemType="https://schema.org/ListItem"
+            >
+              {/* If it's the truncation indicator, just show it */}
+              {item.label === '...' ? (
+                <span>{item.label}</span>
+              ) : item.href && !isLast ? (
+                // For items with links that aren't the last item
+                <Link 
+                  to={item.href} 
+                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                  itemProp="item"
                 >
-                  {breadcrumb.icon && <span className="mr-1.5">{breadcrumb.icon}</span>}
-                  {breadcrumb.label}
+                  {item.icon && item.icon}
+                  <span itemProp="name">{item.label}</span>
                 </Link>
+              ) : (
+                // For the last item or items without links
+                <span 
+                  className={cn(
+                    "flex items-center gap-1",
+                    isLast ? "text-foreground font-medium" : "text-muted-foreground"
+                  )}
+                  aria-current={isLast ? "page" : undefined}
+                  itemProp="name"
+                >
+                  {item.icon && item.icon}
+                  {item.label}
+                </span>
+              )}
+              
+              <meta itemProp="position" content={position.toString()} />
+              
+              {!isLast && (
+                <span className="mx-2 text-muted-foreground" aria-hidden="true">
+                  {separator}
+                </span>
               )}
             </li>
           );
         })}
       </ol>
+      
+      {/* Add structured data for SEO */}
+      <script 
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(generateStructuredData()) }}
+      />
     </nav>
   );
 };

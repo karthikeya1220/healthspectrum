@@ -155,79 +155,96 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
           ? "flex gap-2 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent" 
           : "space-y-1"
       )}>
-        {sortedItems
-          .slice(0, maxItems)
-          .map((item) => (
-            <div 
-              key={item.id}
-              className={cn(
-                "group",
-                isHorizontal ? "flex-shrink-0 w-52" : "",
-                itemClassName
-              )}
-            >
-              <div 
-                role="button"
-                tabIndex={0}
-                className={cn(
-                  "flex items-center justify-between rounded-md p-2 transition-colors text-sm",
-                  "hover:bg-secondary focus:bg-secondary/80 focus:outline-none",
-                  item.pinned && "bg-secondary/50 border-l-2 border-primary",
-                  item.color && `border-l-2 border-health-${item.color}`
-                )}
-                onClick={() => handleItemClick(item)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleItemClick(item);
-                  }
-                }}
-                aria-label={`View ${item.title}`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  {item.icon}
-                  <div className="min-w-0 truncate">
-                    <span className="font-medium flex items-center gap-1">
-                      {item.title}
-                      {item.pinned && <Pin className="h-3 w-3 text-primary" />}
-                    </span>
-                    {item.subtitle && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {item.subtitle}
-                      </p>
+        {/* Group items by type to improve categorization and recall */}
+        {(() => {
+          // Get unique types
+          const types = Array.from(new Set(sortedItems.slice(0, maxItems).map(item => item.type)));
+          
+          return types.map(type => (
+            <div key={type} className="mb-3">
+              <div className="py-1 mb-1">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {type.charAt(0).toUpperCase() + type.slice(1)}s
+                </span>
+              </div>
+              
+              {sortedItems
+                .filter(item => item.type === type)
+                .slice(0, maxItems)
+                .map((item) => (
+                <div 
+                  key={item.id}
+                  className={cn(
+                    "group",
+                    isHorizontal ? "flex-shrink-0 w-52" : "",
+                    itemClassName
+                  )}
+                >
+                  <div 
+                    role="button"
+                    tabIndex={0}
+                    className={cn(
+                      "flex items-center justify-between rounded-md p-2 transition-colors text-sm",
+                      "hover:bg-secondary focus:bg-secondary/80 focus:outline-none",
+                      item.pinned && "bg-secondary/50 border-l-2 border-primary",
+                      item.color && `border-l-2 border-health-${item.color}`
                     )}
+                    onClick={() => handleItemClick(item)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleItemClick(item);
+                      }
+                    }}
+                    aria-label={`View ${item.title}`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      {item.icon}
+                      <div className="min-w-0 truncate">
+                        <span className="font-medium flex items-center gap-1">
+                          {item.title}
+                          {item.pinned && <Pin className="h-3 w-3 text-primary" />}
+                        </span>
+                        {item.subtitle && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {item.subtitle}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatTimestamp(item.timestamp)}
+                      </span>
+                      
+                      {showItemActions && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 focus:opacity-100">
+                              <ArrowRight className="h-4 w-4" />
+                              <span className="sr-only">More options</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-[160px]">
+                            <DropdownMenuItem onClick={() => togglePinItem(item.id)}>
+                              <Pin className="mr-2 h-4 w-4" />
+                              {item.pinned ? "Unpin" : "Pin to top"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => removeItem(item.id)} className="text-health-red">
+                              <Trash className="mr-2 h-4 w-4" />
+                              Remove
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatTimestamp(item.timestamp)}
-                  </span>
-                  
-                  {showItemActions && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 focus:opacity-100">
-                          <ArrowRight className="h-4 w-4" />
-                          <span className="sr-only">More options</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[160px]">
-                        <DropdownMenuItem onClick={() => togglePinItem(item.id)}>
-                          <Pin className="mr-2 h-4 w-4" />
-                          {item.pinned ? "Unpin" : "Pin to top"}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => removeItem(item.id)} className="text-health-red">
-                          <Trash className="mr-2 h-4 w-4" />
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          ));
+        })()}
       </div>
       
       {recentItems.length > maxItems && (

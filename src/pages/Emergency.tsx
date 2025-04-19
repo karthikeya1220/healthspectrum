@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import { 
@@ -13,7 +12,8 @@ import {
   MessageSquare, 
   Send,
   Clock,
-  User
+  User,
+  Navigation
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -119,12 +119,48 @@ interface FirstAidCardProps {
   onClick: () => void;
 }
 
+interface EmergencyActionProps {
+  title: string;
+  icon: React.ReactNode;
+  color: "red" | "blue" | "green" | "orange" | "purple" | "teal";
+  onClick: () => void;
+}
+
+const EmergencyAction = ({ icon, title, color, onClick }: EmergencyActionProps) => {
+  return (
+    <button 
+      className={cn(
+        "p-3 rounded-lg flex items-center gap-3 transition-all",
+        "hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        "btn-primary-action pulse-primary", // Apply our new utility classes
+        color === "red" && "bg-health-red text-white",
+        color === "blue" && "bg-health-blue text-white",
+        color === "green" && "bg-health-green text-white",
+        color === "orange" && "bg-health-orange text-white",
+        color === "purple" && "bg-health-purple text-white",
+        color === "teal" && "bg-health-teal text-white",
+      )}
+      onClick={onClick}
+      aria-label={title}
+    >
+      <div className={cn(
+        "p-2 rounded-full",
+        "bg-white/20", // Semi-transparent white background for the icon
+      )}>
+        {icon}
+      </div>
+      <span className="font-medium">{title}</span>
+    </button>
+  );
+};
+
 const FirstAidCard = ({ title, icon, color, onClick }: FirstAidCardProps) => {
   return (
     <button
       className={cn(
+        "card-interactive hover-card-effect", // Apply our new utility classes
         "p-4 rounded-lg flex flex-col items-center text-center transition-all",
-        "hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        "focus-visible:ring-2 focus-visible:ring-primary",
         color === "red" && "bg-health-red-light",
         color === "blue" && "bg-health-blue-light",
         color === "green" && "bg-health-green-light",
@@ -304,80 +340,58 @@ const Emergency = () => {
     });
   };
   
+  function handleFindER(): void {
+    throw new Error("Function not implemented.");
+  }
+
+  function handleShowFirstAid(arg0: string): void {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <Layout 
       title="Emergency" 
-      subtitle="Quick access to emergency services and first aid information"
+      subtitle="Quick access to emergency resources and information"
     >
-      <div className="max-w-3xl mx-auto animate-fade-in">
-        {/* Emergency Call Button */}
-        <div className="mb-8">
-          <a 
-            href="tel:911" 
-            className="w-full bg-health-red hover:bg-health-red/90 text-white py-4 rounded-xl flex items-center justify-center gap-3 text-lg font-medium transition-colors shadow-md hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-health-red/50"
-            aria-label="Call 911 emergency services"
-          >
-            <Phone className="h-6 w-6" />
-            Call 911 Emergency Services
-          </a>
-          
-          <div className="flex flex-col sm:flex-row gap-3 mt-3">
-            <button 
-              onClick={handleShareLocation}
-              className="flex-1 bg-health-blue hover:bg-health-blue/90 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-health-blue/50"
-              aria-label="Share your location with emergency contacts"
-            >
-              <Share2 className="h-5 w-5" />
-              Share Location
-            </button>
-            <button 
-              onClick={handleEmergencyMessage}
-              className="flex-1 bg-health-purple hover:bg-health-purple/90 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-health-purple/50"
-              aria-label="Send emergency message to contacts"
-            >
-              <MessageSquare className="h-5 w-5" />
-              Emergency Message
-            </button>
+      <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+        {/* Critical Actions */}
+        <div className="critical-callout p-4"> {/* Apply our new utility class */}
+          <h2 className="text-xl font-medium mb-4">Emergency Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <EmergencyAction 
+              icon={<Phone className="h-5 w-5" />}
+              title="Call Emergency Services (911)"
+              color="red"
+              onClick={() => window.location.href = "tel:911"}
+            />
+            
+            <EmergencyAction 
+              icon={<Navigation className="h-5 w-5" />}
+              title="Locate Nearest ER"
+              color="orange"
+              onClick={() => handleFindER()}
+            />
+            
+            <EmergencyAction 
+              icon={<Heart className="h-5 w-5" />}
+              title="CPR Instructions"
+              color="blue"
+              onClick={() => handleShowFirstAid("CPR")}
+            />
+            
+            <EmergencyAction 
+              icon={<AlertTriangle className="h-5 w-5" />}
+              title="Poison Control"
+              color="purple"
+              onClick={() => window.location.href = "tel:18002221222"}
+            />
           </div>
         </div>
         
-        {/* Emergency Contacts */}
-        <div className="mb-8">
-          <h2 className="text-xl font-medium mb-4">Emergency Contacts</h2>
-          <div className="space-y-3">
-            {emergencyContacts.map((contact, index) => (
-              <EmergencyContact 
-                key={index}
-                name={contact.name}
-                relation={contact.relation}
-                phoneNumber={contact.phoneNumber}
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* Nearby Emergency Facilities */}
-        <div className="mb-8">
-          <h2 className="text-xl font-medium mb-4">Nearby Emergency Facilities</h2>
-          <div className="space-y-3">
-            {emergencyFacilities.map((facility, index) => (
-              <EmergencyFacility 
-                key={index}
-                name={facility.name}
-                address={facility.address}
-                distance={facility.distance}
-                phoneNumber={facility.phoneNumber}
-                isOpen24Hours={facility.isOpen24Hours}
-                waitTime={facility.waitTime}
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* First Aid Guides */}
-        <div className="mb-8">
-          <h2 className="text-xl font-medium mb-4">First Aid Guides</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {/* First Aid Resources */}
+        <div>
+          <h2 className="text-xl font-medium mb-4">First Aid Resources</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {firstAidGuides.map((guide, index) => (
               <FirstAidCard 
                 key={index}
@@ -388,55 +402,43 @@ const Emergency = () => {
               />
             ))}
           </div>
-          
-          <div className="mt-4 p-4 bg-secondary/50 rounded-lg border">
-            <a 
-              href="https://www.redcross.org/take-a-class/first-aid" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-between text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md p-1"
-            >
-              <span>Take a First Aid certification course</span>
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </div>
         </div>
         
-        {/* Medical ID Summary */}
-        <div className="mb-8 bg-health-blue-light p-5 rounded-xl border">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-lg font-medium mb-2">Your Medical ID</h2>
-              <p className="text-sm text-muted-foreground mb-3">
-                Your key medical information is available to emergency responders even when your phone is locked.
-              </p>
+        {/* Medical ID */}
+        <div className="card-modern"> {/* Apply our new utility class */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-2 rounded-full bg-health-blue-light text-health-blue">
+              <User className="h-5 w-5" />
             </div>
-            <div className="p-2 rounded-full bg-health-blue/20 text-health-blue">
-              <Clipboard className="h-5 w-5" />
-            </div>
+            <h2 className="text-xl font-medium">Medical ID</h2>
           </div>
           
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <div>
-              <span className="text-muted-foreground">Blood Type:</span>
-              <p>A+</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div>
+                <span className="text-muted-foreground">Blood Type:</span>
+                <p>A+</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Allergies:</span>
+                <p>Penicillin, Shellfish</p>
+              </div>
             </div>
-            <div>
-              <span className="text-muted-foreground">Allergies:</span>
-              <p>Penicillin, Shellfish</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Conditions:</span>
-              <p>Asthma, Hypertension</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Medications:</span>
-              <p>Albuterol, Lisinopril</p>
+            
+            <div className="space-y-3">
+              <div>
+                <span className="text-muted-foreground">Conditions:</span>
+                <p>Asthma, Hypertension</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Medications:</span>
+                <p>Albuterol, Lisinopril</p>
+              </div>
             </div>
           </div>
           
           <button 
-            className="mt-4 w-full py-2 bg-health-blue text-white rounded-lg hover:bg-health-blue/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-health-blue/50"
+            className="mt-4 w-full py-2 bg-health-blue text-white rounded-lg hover:bg-health-blue/90 transition-colors focus-visible-ring btn-primary-action" // Apply our new utility classes
           >
             Update Medical ID
           </button>

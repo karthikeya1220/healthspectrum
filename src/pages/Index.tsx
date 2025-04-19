@@ -1,10 +1,9 @@
-
 import React from "react";
 import Layout from "@/components/Layout";
 import HealthMetricCard from "@/components/HealthMetricCard";
 import AppointmentCard, { AppointmentProps } from "@/components/AppointmentCard";
 import MedicationCard, { MedicationProps } from "@/components/MedicationCard";
-import { Heart, Activity, Weight, Footprints, Plus, ArrowUpRight } from "lucide-react";
+import { Heart, Activity, Weight, Footprints, Plus, ArrowUpRight, AlertTriangle, Pill } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -96,6 +95,39 @@ const Index = () => {
       subtitle="Welcome back, Alex! Here's an overview of your health"
     >
       <div className="space-y-8 animate-fade-in">
+        {/* Critical Health Alerts - Most important information first */}
+        {medications.some(med => med.isLowSupply) && (
+          <section>
+            <div className="bg-health-red-light border border-health-red/30 rounded-lg p-4 mb-4">
+              <h2 className="text-lg font-medium flex items-center gap-2 text-health-red mb-2">
+                <AlertTriangle className="h-5 w-5" />
+                Action Required
+              </h2>
+              <div className="space-y-2">
+                {medications.filter(med => med.isLowSupply).map(med => (
+                  <div key={med.id} className="flex justify-between items-center bg-white rounded-md p-3 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-full bg-health-red/10">
+                        <Pill className="h-4 w-4 text-health-red" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{med.name} is low on supply</p>
+                        <p className="text-xs text-muted-foreground">Refill date: {med.refillDate}</p>
+                      </div>
+                    </div>
+                    <Link 
+                      to={`/medications?action=refill&id=${med.id}`}
+                      className="text-xs px-3 py-1.5 rounded-md bg-health-red text-white hover:bg-health-red/90"
+                    >
+                      Request Refill
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+        
         {/* Health Metrics */}
         <section>
           <div className="flex justify-between items-center mb-4">
@@ -128,7 +160,7 @@ const Index = () => {
             <h2 className="text-xl font-medium">Upcoming Appointments</h2>
             <Link 
               to="/appointments" 
-              className="text-sm flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+              className="text-sm flex items-center gap-1 px-3 py-1.5 rounded-lg btn-primary-action"
             >
               <Plus className="h-4 w-4" />
               Book Appointment

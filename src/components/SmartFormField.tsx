@@ -191,6 +191,27 @@ const SmartFormField: React.FC<SmartFormFieldProps> = ({
     lg: "h-12 text-base px-4",
   };
   
+  // ARIA attributes for better accessibility
+  const ariaAttributes = {
+    'aria-invalid': isInvalid,
+    'aria-required': required,
+    'aria-describedby': `${id}-help ${id}-error`,
+  };
+  
+  // Error message for screen readers
+  const screenReaderErrorMessage = isInvalid ? (
+    <div id={`${id}-error`} className="sr-only" role="alert">
+      {errors[0]}
+    </div>
+  ) : null;
+  
+  // Help text for screen readers
+  const screenReaderHelpText = helpText ? (
+    <div id={`${id}-help`} className="sr-only">
+      {helpText}
+    </div>
+  ) : null;
+  
   return (
     <div className={cn("mb-4", className)}>
       <label 
@@ -230,8 +251,7 @@ const SmartFormField: React.FC<SmartFormFieldProps> = ({
             showPasswordToggle && "pr-10",
             inputClassName
           )}
-          aria-invalid={isInvalid}
-          aria-describedby={`${id}-help ${id}-error`}
+          {...ariaAttributes}
         />
         
         {/* Success/Error indicators */}
@@ -250,6 +270,7 @@ const SmartFormField: React.FC<SmartFormFieldProps> = ({
             onClick={togglePasswordVisibility}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
             tabIndex={-1}
           >
             {showPassword ? (
@@ -263,7 +284,7 @@ const SmartFormField: React.FC<SmartFormFieldProps> = ({
       
       {/* Help text */}
       {helpText && !isInvalid && (
-        <div id={`${id}-help`} className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
+        <div id={`${id}-help-visible`} className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
           <HelpCircle className="mt-0.5 h-3 w-3 flex-shrink-0" />
           <span>{helpText}</span>
         </div>
@@ -272,7 +293,7 @@ const SmartFormField: React.FC<SmartFormFieldProps> = ({
       {/* Error messages */}
       {isInvalid && errors.length > 0 && (
         <div 
-          id={`${id}-error`} 
+          id={`${id}-error-visible`} 
           className={cn(
             "mt-1 text-xs text-health-red", 
             errorClassName
@@ -310,6 +331,10 @@ const SmartFormField: React.FC<SmartFormFieldProps> = ({
           </span>
         </div>
       )}
+      
+      {/* Screen reader only content */}
+      {screenReaderErrorMessage}
+      {screenReaderHelpText}
     </div>
   );
 };
