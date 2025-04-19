@@ -10,6 +10,8 @@ import Settings from './pages/Settings';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from './components/ui/toaster';
 import NotFound from './pages/NotFound';
+import CommandMenu from './components/CommandMenu';
+import NetworkStatus from './components/NetworkStatus';
 
 // Scroll to top component for better UX - Consistency & Standards (Nielsen's Heuristic #4)
 function ScrollToTop() {
@@ -65,10 +67,12 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <SkipToContent />
-      <ScrollToTop />
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <Router>
+        <SkipToContent />
+        <ScrollToTop />
+        <CommandMenu />
+        <NetworkStatus />
         <main id="main-content">
           <Routes>
             <Route path="/" element={<Index />} />
@@ -82,9 +86,9 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
-      </ErrorBoundary>
-      <Toaster />
-    </Router>
+        <Toaster />
+      </Router>
+    </ErrorBoundary>
   );
 }
 
