@@ -1,40 +1,91 @@
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import Index from './pages/Index';
+import MedicalRecords from './pages/MedicalRecords';
+import AppointmentBooking from './pages/AppointmentBooking';
+import MedicationTracker from './pages/MedicationTracker';
+import Emergency from './pages/Emergency';
+import HelpSupport from './pages/HelpSupport';
+import Settings from './pages/Settings';
+import ErrorBoundary from './components/ErrorBoundary';
+import { Toaster } from './components/ui/toaster';
+import NotFound from './pages/NotFound';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import AppointmentBooking from "./pages/AppointmentBooking";
-import MedicationTracker from "./pages/MedicationTracker";
-import MedicalRecords from "./pages/MedicalRecords";
-import Emergency from "./pages/Emergency";
-import Settings from "./pages/Settings";
-import HelpSupport from "./pages/HelpSupport";
-import NotFound from "./pages/NotFound";
+// Scroll to top component for better UX - Consistency & Standards (Nielsen's Heuristic #4)
+function ScrollToTop() {
+  const { pathname } = useLocation();
 
-const queryClient = new QueryClient();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+  return null;
+}
+
+// Skip to content link for accessibility - matches real world (Nielsen's Heuristic #2)
+function SkipToContent() {
+  return (
+    <a href="#main-content" className="skip-to-content">
+      Skip to content
+    </a>
+  );
+}
+
+function App() {
+  // Register keyboard shortcuts - Flexibility and efficiency (Nielsen's Heuristic #7)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only activate shortcuts when not in input/textarea elements
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Common shortcuts following systems users already know
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case '/': // Search shortcut
+            e.preventDefault();
+            document.querySelector<HTMLInputElement>('input[aria-label="Search"]')?.focus();
+            break;
+          case ',': // Settings shortcut
+            e.preventDefault();
+            window.location.href = '/settings';
+            break;
+          case 'e': // Emergency shortcut
+            e.preventDefault();
+            window.location.href = '/emergency';
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return (
+    <Router>
+      <SkipToContent />
+      <ScrollToTop />
+      <ErrorBoundary>
+        <main id="main-content">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/records" element={<MedicalRecords />} />
+            <Route path="/appointments" element={<AppointmentBooking />} />
+            <Route path="/medications" element={<MedicationTracker />} />
+            <Route path="/emergency" element={<Emergency />} />
+            <Route path="/help" element={<HelpSupport />} />
+            <Route path="/settings" element={<Settings />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </ErrorBoundary>
       <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/appointments" element={<AppointmentBooking />} />
-          <Route path="/medications" element={<MedicationTracker />} />
-          <Route path="/records" element={<MedicalRecords />} />
-          <Route path="/emergency" element={<Emergency />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/help" element={<HelpSupport />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </Router>
+  );
+}
 
 export default App;
